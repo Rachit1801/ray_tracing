@@ -14,50 +14,39 @@ struct Circle {
     double r;
 };
 
-void drawRays(SDL_Renderer* renderer, float cx, float cy, int rayCount,struct Circle circle, Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
+void drawRays(SDL_Renderer* renderer, double cx, double cy, int rayCount,struct Circle circle, Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
     SDL_SetRenderDrawColor(renderer, r, g, b, a);
 
-    float ox = cx, oy = cy;  // ray origin
+    for (int i = 0; i < rayCount; i++) {
+        double angle = (2.0 * M_PI * i) / rayCount;
+        double dx = cos(angle);
+        double dy = sin(angle);
 
-    for (int i = 0; i < rayCount; ++i) {
-        float angle = (2.0f * M_PI * i) / rayCount;
-        float dx = cosf(angle);
-        float dy = sinf(angle);
+        /*double t = 10000.0; // large enough to go off screen
+        double x2 = cx + dx * t;
+        double y2 = cy + dy * t;*/
 
-        // Compute intersection with circle using line equation
-        float cx_ = circle.x, cy_ = circle.y, radius = circle.r;
+        bool hit = false;
 
-        // Vector from ray origin to circle center
-        float fx = ox - cx_;
-        float fy = oy - cy_;
-
-        float a_term = dx * dx + dy * dy;
-        float b_term = 2 * (fx * dx + fy * dy);
-        float c_term = fx * fx + fy * fy - radius * radius;
-
-        float discriminant = b_term * b_term - 4 * a_term * c_term;
-
-        if (discriminant >= 0) {
-            // Ray hits the circle
-            discriminant = sqrtf(discriminant);
-
-            float t1 = (-b_term - discriminant) / (2 * a_term);
-            float t2 = (-b_term + discriminant) / (2 * a_term);
-
-            float t = fminf(t1, t2);  // smallest positive intersection
-
-            if (t > 0) {
-                float x2 = ox + dx * t;
-                float y2 = oy + dy * t;
-                SDL_RenderLine(renderer, ox, oy, x2, y2);
-            }
-        } else {
-            // No hit: draw full ray
-            SDL_RenderLine(renderer, ox, oy, ox + dx * 1000, oy + dy * 1000);
+        double step = 1;
+        double x = cx;
+        double y = cy;
+        while(!hit) {
+            x += step * dx;
+            y += step * dy;
+            if(x < 0 || x > WINDOW_WIDTH)
+                hit = true;
+            if(y < 0 || y > WINDOW_HEIGHT)
+                hit = true;
+            double dist_sq = pow(x - circle.x,2) + pow(y - circle.y,2);
+            if(dist_sq < pow(circle.r,2))
+                hit = true;
+            step++;
+            //SDL_RenderPoint(renderer,x,y);
+            SDL_RenderLine(renderer, cx, cy, x, y);
         }
     }
 }
-
 
 void fillCircle(SDL_Renderer* renderer, struct Circle circle, Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
     SDL_SetRenderDrawColor(renderer, r, g, b, a);
@@ -85,9 +74,10 @@ int main() {
     Rectangle
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_FRect rect = {100.0f, 100.0f, 100.0f, 100.0f};
+    SDL_FRect rect = {100.0, 100.0, 100.0, 100.0};
     SDL_RenderFillRect(renderer, &rect);
     */
+
     struct Circle circle = {320,240,80};
     SDL_Event event;
     bool running = true;
@@ -105,7 +95,7 @@ int main() {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black background
         SDL_RenderClear(renderer);
 
-        drawRays(renderer, 320, 240, 100, circle, 255, 160, 160, 255);
+        drawRays(renderer,320,240,100,circle,255,160,160,255);
 
         fillCircle(renderer,circle,255,255,255,255);
         SDL_RenderPresent(renderer);
